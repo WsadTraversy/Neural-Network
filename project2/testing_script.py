@@ -1,9 +1,9 @@
 import torch
 import csv
-from process_data import get_train_data, get_test_data
+from process_data import get_data 
 from model import PriceClassifier
 
-test_dataset = get_test_data()
+test_dataset = get_data(test_dataset=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
 
 device = torch.device("cpu")
@@ -35,3 +35,5 @@ with open('data/koncowy.csv', mode='w', newline='') as file:
     
     for item in list_to_save:
         writer.writerow([item])
+
+print("File saved!")
