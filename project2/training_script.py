@@ -4,11 +4,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torchmetrics.classification import BinaryAccuracy
 import numpy as np
-from process_data import get_train_data
+from process_data import get_data
 from model import PriceClassifier
 
 
-train_dataset, validation_dataset = get_train_data()
+train_dataset, validation_dataset = get_data()
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
 validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=64, shuffle=True)
@@ -71,5 +71,5 @@ for n in range(250):
 
 print(f"Best validation loss: {best_valid_loss:.4f}, Best validation accuracy: {best_valid_acc:.4f}")
 
-model.load_state_dict(best_weights)
-torch.save(model.state_dict(), "data/state_dict.pickle")
+# model.load_state_dict(best_weights)
+# torch.save(model.state_dict(), "data/state_dict.pickle")
