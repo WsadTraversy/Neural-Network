@@ -4,21 +4,15 @@ import torch
 import torch.utils.data as data
 from collections import Counter
 
-def get_train_data():
-    df = pd.read_csv('data/train_data.csv', delimiter=',')
+def get_data(test_dataset=False):
+    if not test_dataset:
+        df = pd.read_csv('data/train_data.csv', delimiter=',')
+    else:
+        df = pd.read_csv('data/test_data.csv', delimiter=',')
+
     df.drop(columns=['SubwayStation'], inplace=True)
 
     df = df.apply(lambda col: col.astype(float) if col.dtype == 'int' else col, axis=0)
-
-    # Targets
-    train_indices = np.random.rand(len(df))>0.3
-
-    targets_values = df['SalePrice'].apply(lambda row: 'cheap' if row <= 100000.0 else 'average' if 100000 < row <= 350000 else 'expensive')
-    targets_dummies = pd.get_dummies(targets_values)
-    
-    targets_train = torch.from_numpy(targets_dummies.values[train_indices]).float()
-    targets_valid = torch.from_numpy(targets_dummies.values[~train_indices]).float()
-    df.drop(columns=['SalePrice'], inplace=True)
 
     # TimeToBusStop, TimeToSubway
     unique_values = {'no_bus_stop_nearby':float(0), '0-5min':float(0.25),'0~5min':float(0.25),  '5min-10min':float(0.5),'5min~10min':float(0.5),
@@ -33,43 +27,35 @@ def get_train_data():
 
     df.drop(columns=categorical_columns, inplace=True)
     
-    df = (df - df.min()) / (df.max() - df.min())
+    if not test_dataset:
+        train_indices = np.random.rand(len(df))>0.3
 
-    numerical_data_train = torch.from_numpy(df.values[train_indices, :]).float()
-    numerical_data_valid = torch.from_numpy(df.values[~train_indices, :]).float()
-    categorical_data_train = torch.from_numpy(categorical_values.values[train_indices]).float()
-    categorical_data_valid = torch.from_numpy(categorical_values.values[~train_indices]).float()
+        # Targets
+        targets_values = df['SalePrice'].apply(lambda row: 'cheap' if row <= 100000.0 else 'average' if 100000 < row <= 350000 else 'expensive')
+        targets_dummies = pd.get_dummies(targets_values)
+        
+        targets_train = torch.from_numpy(targets_dummies.values[train_indices]).float()
+        targets_valid = torch.from_numpy(targets_dummies.values[~train_indices]).float()
+        df.drop(columns=['SalePrice'], inplace=True)
 
-   
-    train_dataset = data.TensorDataset(numerical_data_train, categorical_data_train, targets_train)
-    validation_dataset = data.TensorDataset(numerical_data_valid, categorical_data_valid, targets_valid)
+        df = (df - df.min()) / (df.max() - df.min())
 
-    return train_dataset, validation_dataset
+        numerical_data_train = torch.from_numpy(df.values[train_indices, :]).float()
+        numerical_data_valid = torch.from_numpy(df.values[~train_indices, :]).float()
+        categorical_data_train = torch.from_numpy(categorical_values.values[train_indices]).float()
+        categorical_data_valid = torch.from_numpy(categorical_values.values[~train_indices]).float()
 
-def get_test_data():
-    df = pd.read_csv('data/test_data.csv', delimiter=',')
-    df.drop(columns=['SubwayStation'], inplace=True)
-
-    df = df.apply(lambda col: col.astype(float) if col.dtype == 'int' else col, axis=0)
     
-    # TimeToBusStop, TimeToSubway
-    unique_values = {'no_bus_stop_nearby':float(0), '0-5min':float(0.25),'0~5min':float(0.25),  '5min-10min':float(0.5),'5min~10min':float(0.5),
-                      '10min-15min':float(0.75),'10min~15min':float(0.75), '15min-20min':float(1),'15min~20min':float(1)}
+        train_dataset = data.TensorDataset(numerical_data_train, categorical_data_train, targets_train)
+        validation_dataset = data.TensorDataset(numerical_data_valid, categorical_data_valid, targets_valid)
 
-    df['TimeToBusStop'] = df['TimeToBusStop'].map(unique_values)
-    df['TimeToSubway'] = df['TimeToSubway'].map(unique_values)
+        return train_dataset, validation_dataset
+    else:
+        df = (df - df.min()) / (df.max() - df.min())
 
-    # 'HallwayType', 'HeatingType', 'AptManageType'
-    categorical_columns = ['HallwayType', 'HeatingType', 'AptManageType']
-    categorical_values = pd.get_dummies(df[categorical_columns])
+        numerical_data = torch.from_numpy(df.values).float()
+        categorical_data = torch.from_numpy(categorical_values.values).float()
 
-    df.drop(columns=categorical_columns, inplace=True)
-    
-    df = (df - df.min()) / (df.max() - df.min())
+        dataset = data.TensorDataset(numerical_data, categorical_data)
 
-    numerical_data = torch.from_numpy(df.values).float()
-    categorical_data = torch.from_numpy(categorical_values.values).float()
-
-    dataset = data.TensorDataset(numerical_data, categorical_data)
-
-    return dataset
+        return dataset
