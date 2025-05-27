@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import torch
+import random
 from torch.nn.utils.rnn import pad_sequence
 
 def get_data(set: str):
@@ -10,20 +11,30 @@ def get_data(set: str):
 
     (x_data, targets)  = zip(*[(x[0], x[1]) for x in data]) 
 
-    train_split = int(len(x_data) * 0.7)
-    train_x_seq = x_data[:train_split]
-    test_x_seq = x_data[train_split:]
-
-    all_values = np.concatenate(train_x_seq)
+    all_values = np.concatenate(x_data)
     mean = np.mean(all_values)
     std = np.std(all_values)
 
-    normalized_x_train = [torch.tensor((x - mean) / std).type(torch.float32) for x in train_x_seq]
-    normalized_x_test = [torch.tensor((x - mean) / std).type(torch.float32) for x in test_x_seq]
+    normalized_x = [torch.tensor((x - mean) / std).type(torch.float32) for x in x_data]
+    normalized_data = list(zip(normalized_x, targets))
+    
+    data_0 = [x for x in normalized_data if x[1] == 0]
+    random.shuffle(data_0)
+    data_1 = [x for x in normalized_data if x[1] == 1]
+    random.shuffle(data_1)
+    data_2 = [x for x in normalized_data if x[1] == 2]
+    random.shuffle(data_2)
+    data_3 = [x for x in normalized_data if x[1] == 3]
+    random.shuffle(data_3)
+    data_4 = [x for x in normalized_data if x[1] == 4]
+    random.shuffle(data_4)
+
+    data_train = random.sample(data_0, k=500) + random.choices(data_1, k=500) + random.choices(data_2, k=500) + random.choices(data_3, k=500) + random.choices(data_4, k=500)
+    (x_train, targets) = zip(*[(x[0], x[1]) for x in data_train])
     if set == 'train':
-        return (normalized_x_train, targets[:train_split])
+        return (x_train, targets)
     elif set == 'test':
-        return (normalized_x_test, targets[train_split:])
+        return None
     else:
         raise ValueError('Choose beetwen train, test sets')
 
