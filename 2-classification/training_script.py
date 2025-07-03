@@ -2,7 +2,7 @@ import torch
 import torch.utils.data as data
 import torch.nn as nn
 import torch.optim as optim
-from torchmetrics.classification import BinaryAccuracy
+from torchmetrics import Accuracy
 import numpy as np
 from process_data import get_data
 from model import PriceClassifier
@@ -17,7 +17,7 @@ validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=6
 device = torch.device("cpu")
 model = PriceClassifier().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-accuracy = BinaryAccuracy(multidim_average="global")
+accuracy = Accuracy(task="multiclass", num_classes=3)
 
 class_weights = torch.tensor([1.38, 7.34, 7.24])
 criterion = nn.CrossEntropyLoss(weight=class_weights)

@@ -31,11 +31,11 @@ def get_data(test_dataset=False):
         train_indices = np.random.rand(len(df))>0.3
 
         # Targets
-        targets_values = df['SalePrice'].apply(lambda row: 'cheap' if row <= 100000.0 else 'average' if 100000 < row <= 350000 else 'expensive')
-        targets_dummies = pd.get_dummies(targets_values)
+        targets_values = df['SalePrice'].apply(lambda row: 0 if row <= 100000.0 else 1 if 100000 < row <= 350000 else 2)
+
+        targets_train = torch.tensor(targets_values.values[train_indices])
+        targets_valid = torch.tensor(targets_values.values[~train_indices])
         
-        targets_train = torch.from_numpy(targets_dummies.values[train_indices]).float()
-        targets_valid = torch.from_numpy(targets_dummies.values[~train_indices]).float()
         df.drop(columns=['SalePrice'], inplace=True)
 
         df = (df - df.min()) / (df.max() - df.min())
